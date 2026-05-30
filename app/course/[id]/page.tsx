@@ -1,9 +1,10 @@
 import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/Navbar'
 import StatusBadge from '@/components/StatusBadge'
 import CourseClient from './CourseClient'
-import { Clock, PlayCircle } from 'lucide-react'
+import { Clock, ArrowLeft } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -81,9 +82,16 @@ export default async function CoursePage({ params }: PageProps) {
     <div className="min-h-screen bg-[#0a0a18]">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Header */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
+        {/* Back + Header */}
         <div className="mb-8">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-5 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">{course.title}</h1>

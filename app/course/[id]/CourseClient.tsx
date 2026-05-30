@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, Loader2, PlayCircle, AlertCircle, Trophy } from 'lucide-react'
+import { CheckCircle, Loader2, PlayCircle, AlertCircle, Trophy, ArrowLeft } from 'lucide-react'
 
 type Video = {
   id: number
@@ -136,7 +137,7 @@ export default function CourseClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16">
       {/* Video player */}
       {videos.length > 0 && (
         <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl overflow-hidden">
@@ -267,17 +268,37 @@ export default function CourseClient({
                   {result.correctCount} of {result.totalCount} correct
                 </p>
                 <p className={`text-sm font-medium mt-2 ${result.passed ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {result.passed ? 'You passed this course!' : 'You need a higher score to pass.'}
+                  {result.passed ? 'You passed this course!' : 'You need 70% or higher to pass.'}
                 </p>
               </div>
-              {!result.passed && (
-                <button
-                  onClick={handleRetry}
-                  className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
-                >
-                  Try Again
-                </button>
-              )}
+
+              <div className="flex gap-3 mt-4">
+                {result.passed ? (
+                  <Link
+                    href="/dashboard"
+                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg text-sm transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleRetry}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-lg text-sm transition-colors"
+                    >
+                      Try Again
+                    </button>
+                    <Link
+                      href="/dashboard"
+                      className="flex-1 flex items-center justify-center gap-2 bg-[#0a0a18] hover:bg-[#252545] border border-[#2a2a4a] text-slate-300 font-medium py-3 rounded-lg text-sm transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             /* Quiz form */
@@ -323,20 +344,33 @@ export default function CourseClient({
                 </div>
               ))}
 
-              <button
-                onClick={handleSubmitQuiz}
-                disabled={!allAnswered || submitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 mt-4"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting…
-                  </>
-                ) : (
-                  `Submit Quiz (${Object.keys(answers).length}/${questions.length} answered)`
-                )}
-              </button>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleSubmitQuiz}
+                  disabled={!allAnswered || submitting}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Submitting…
+                    </>
+                  ) : !allAnswered ? (
+                    `Answer all questions to submit (${Object.keys(answers).length}/${questions.length})`
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Submit Answers
+                    </>
+                  )}
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center justify-center gap-2 px-4 bg-[#0a0a18] hover:bg-[#252545] border border-[#2a2a4a] text-slate-400 hover:text-white rounded-lg text-sm transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           )}
         </div>
