@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle } from 'lucide-react'
+import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle, Lock, Unlock } from 'lucide-react'
 
 interface Question {
   id: number
@@ -18,13 +18,20 @@ interface Question {
 interface Props {
   courseId: number
   questions: Question[]
+  requireFullVideoWatch: boolean
 }
 
 type OptionKey = 'A' | 'B' | 'C' | 'D'
 const OPTIONS: OptionKey[] = ['A', 'B', 'C', 'D']
 
-export default function QuestionManager({ courseId, questions }: Props) {
+export default function QuestionManager({ courseId, questions, requireFullVideoWatch }: Props) {
   const router = useRouter()
+
+  // Video-gate toggle
+  const [videoGate, setVideoGate] = useState(requireFullVideoWatch)
+  const [togglingGate, setTogglingGate] = useState(false)
+
+  // Question form
   const [showForm, setShowForm] = useState(false)
   const [text, setText] = useState('')
   const [options, setOptions] = useState<Record<OptionKey, string>>({
@@ -40,6 +47,22 @@ export default function QuestionManager({ courseId, questions }: Props) {
     setOptions({ A: '', B: '', C: '', D: '' })
     setCorrectAnswer('A')
     setError(null)
+  }
+
+  async function handleToggleVideoGate() {
+    setTogglingGate(true)
+    const next = !videoGate
+    const supabase = createClient()
+    const { error: updateError } = await supabase
+      .from('courses')
+      .update({ require_full_video_watch: next })
+      .eq('id', courseId)
+
+    if (!updateError) {
+      setVideoGate(next)
+      router.refresh()
+    }
+    setTogglingGate(false)
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -84,15 +107,44 @@ export default function QuestionManager({ courseId, questions }: Props) {
   }
 
   const optionLabel: Record<OptionKey, string> = {
-    A: 'Option A',
-    B: 'Option B',
-    C: 'Option C',
-    D: 'Option D',
+    A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D',
   }
 
   return (
-    <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl p-6">
-      <div className="flex items-center justify-between mb-5">
+    <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl p-6 space-y-5">
+      {/* ── Video gate toggle ─────────────────────────────────────────────── */}
+      <div className="bg-[#0a0a18] border border-[#2a2a4a] rounded-xl p-4 flex items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className={`mt-0.5 p-1.5 rounded-lg ${videoGate ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700/40 text-slate-500'}`}>
+            {videoGate ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+          </div>
+          <div>
+            <p className="text-white text-sm font-medium">Require video watch before quiz</p>
+            <p className="text-slate-500 text-xs mt-0.5">
+              Learners must mark the video as watched before the quiz unlocks.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={togglingGate}
+          onClick={handleToggleVideoGate}
+          aria-checked={videoGate}
+          role="switch"
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#0a0a18] ${
+            videoGate ? 'bg-indigo-600' : 'bg-[#2a2a4a]'
+          } ${togglingGate ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <span
+            className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform ring-0 transition-transform ${
+              videoGate ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* ── Questions header ──────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-indigo-400" />
           Quiz Questions
@@ -107,9 +159,9 @@ export default function QuestionManager({ courseId, questions }: Props) {
         </button>
       </div>
 
-      {/* Add form */}
+      {/* ── Add form ──────────────────────────────────────────────────────── */}
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-[#0a0a18] border border-[#2a2a4a] rounded-xl p-5 mb-5 space-y-4">
+        <form onSubmit={handleAdd} className="bg-[#0a0a18] border border-[#2a2a4a] rounded-xl p-5 space-y-4">
           {error && (
             <p className="text-red-400 text-sm">{error}</p>
           )}
@@ -174,7 +226,7 @@ export default function QuestionManager({ courseId, questions }: Props) {
         </form>
       )}
 
-      {/* Question list */}
+      {/* ── Question list ─────────────────────────────────────────────────── */}
       {questions.length === 0 ? (
         <div className="text-center py-8 text-slate-500 text-sm">
           No questions yet. Add the first one above.
