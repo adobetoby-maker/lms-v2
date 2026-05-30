@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /course/
+Disallow: /api/
+Allow: /login
+Sitemap: https://lms-v2-green.vercel.app/sitemap.xml
