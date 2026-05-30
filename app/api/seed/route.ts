@@ -70,9 +70,9 @@ export async function GET(request: Request) {
           title: 'Professional Development Fundamentals',
           description: 'Build the leadership mindset and intrinsic motivation skills that drive high-performing teams.',
           videos: [
-            { title: 'Simon Sinek: How Great Leaders Inspire Action', url: 'https://www.youtube.com/embed/qp0HIF3SfI4', duration_seconds: 1088, sort_order: 1 },
-            { title: 'Angela Duckworth: The Power of Passion and Perseverance', url: 'https://www.youtube.com/embed/H14bBuluwB8', duration_seconds: 366, sort_order: 2 },
-            { title: 'Carol Dweck: The Power of Believing That You Can Improve', url: 'https://www.youtube.com/embed/_X0mgOOSpLU', duration_seconds: 618, sort_order: 3 },
+            { title: 'Simon Sinek: How Great Leaders Inspire Action', url: 'https://www.youtube.com/watch?v=qp0HIF3SfI4', duration_seconds: 1088, sort_order: 1 },
+            { title: 'Angela Duckworth: The Power of Passion and Perseverance', url: 'https://www.youtube.com/watch?v=H14bBuluwB8', duration_seconds: 366, sort_order: 2 },
+            { title: 'Carol Dweck: The Power of Believing That You Can Improve', url: 'https://www.youtube.com/watch?v=_X0mgOOSpLU', duration_seconds: 618, sort_order: 3 },
           ],
           questions: [
             { text: "According to Simon Sinek, what is the 'Golden Circle' concept?", option_a: 'A framework starting with Why, then How, then What', option_b: 'A sales technique for closing deals', option_c: 'A time management tool for executives', option_d: 'A method for hiring top performers', correct_answer: 'A' },
@@ -84,9 +84,9 @@ export async function GET(request: Request) {
           title: 'Workplace Communication Excellence',
           description: 'Master the science of effective verbal and non-verbal communication.',
           videos: [
-            { title: 'Julian Treasure: How to Speak So That People Want to Listen', url: 'https://www.youtube.com/embed/eIho2S0ZahI', duration_seconds: 599, sort_order: 1 },
-            { title: 'Celeste Headlee: 10 Ways to Have a Better Conversation', url: 'https://www.youtube.com/embed/R1vskiVDwl4', duration_seconds: 688, sort_order: 2 },
-            { title: 'Amy Cuddy: Your Body Language May Shape Who You Are', url: 'https://www.youtube.com/embed/Ks-_Mh1QhMc', duration_seconds: 1262, sort_order: 3 },
+            { title: 'Julian Treasure: How to Speak So That People Want to Listen', url: 'https://www.youtube.com/watch?v=eIho2S0ZahI', duration_seconds: 599, sort_order: 1 },
+            { title: 'Celeste Headlee: 10 Ways to Have a Better Conversation', url: 'https://www.youtube.com/watch?v=R1vskiVDwl4', duration_seconds: 688, sort_order: 2 },
+            { title: 'Amy Cuddy: Your Body Language May Shape Who You Are', url: 'https://www.youtube.com/watch?v=Ks-_Mh1QhMc', duration_seconds: 1262, sort_order: 3 },
           ],
           questions: [
             { text: 'Julian Treasure identifies which habit as most damaging to communication?', option_a: 'Gossip, judging, and negativity', option_b: 'Speaking too quickly', option_c: 'Avoiding eye contact', option_d: 'Using complex vocabulary', correct_answer: 'A' },

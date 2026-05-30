@@ -167,8 +167,8 @@ export default function CourseClient({
             </div>
           )}
 
-          {/* Embed */}
-          <div className="p-5">
+          {/* Embed + fallback */}
+          <div className="p-5 space-y-3">
             {currentVideo?.ytId ? (
               <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
                 <iframe
@@ -181,21 +181,21 @@ export default function CourseClient({
               </div>
             ) : (
               <div className="w-full aspect-video rounded-lg bg-[#0a0a18] border border-[#2a2a4a] flex items-center justify-center">
-                <div className="text-center">
-                  <PlayCircle className="w-12 h-12 text-slate-600 mx-auto mb-2" />
-                  <p className="text-slate-500 text-sm">Video URL not supported for embed</p>
-                  {currentVideo?.url && (
-                    <a
-                      href={currentVideo.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-400 text-sm hover:underline mt-1 block"
-                    >
-                      Open video →
-                    </a>
-                  )}
-                </div>
+                <PlayCircle className="w-12 h-12 text-slate-600" />
               </div>
+            )}
+
+            {/* Always show open link — TED talks often block embedding */}
+            {currentVideo?.url && (
+              <a
+                href={currentVideo.url.replace('/embed/', '/watch?v=')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                <PlayCircle className="w-4 h-4" />
+                If the video is blocked, watch it on YouTube →
+              </a>
             )}
           </div>
 
