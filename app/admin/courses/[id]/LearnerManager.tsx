@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Users, Mail, Loader2, Copy, Check, AlertCircle, RefreshCw,
@@ -118,10 +118,12 @@ export default function LearnerManager({ courseId, learners, summary }: Props) {
   const [singleResult, setSingleResult] = useState<string | null>(null)
   const [singleError, setSingleError] = useState<string | null>(null)
 
-  const [bulkText, setBulkText] = useState('')
+  const [bulkEmails, setBulkEmails] = useState<string[]>([])
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResults, setBulkResults] = useState<{ email: string; url: string }[]>([])
   const [bulkError, setBulkError] = useState<string | null>(null)
+  const [csvDragOver, setCsvDragOver] = useState(false)
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   // ── Resend link state (keyed by learner id)
   const [resendLinks, setResendLinks] = useState<Record<string, string>>({})
@@ -150,19 +152,60 @@ export default function LearnerManager({ courseId, learners, summary }: Props) {
     setSingleLoading(false)
   }
 
+  // Parse emails from CSV/text content
+  function parseEmails(text: string): string[] {
+    return text
+      .split(/[\n,;\r\t]+/)
+      .map(s => s.trim().replace(/^["']|["']$/g, '').toLowerCase())
+      .filter(s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))
+  }
+
+  // Parse a CSV file — looks for an email column or treats first column as email
+  function parseCsvFile(content: string): string[] {
+    const lines = content.split(/\r?\n/).filter(l => l.trim())
+    const emails: string[] = []
+    for (const line of lines) {
+      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+      // Find first cell that looks like an email
+      const email = cols.find(c => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c))
+      if (email) emails.push(email.toLowerCase())
+    }
+    return [...new Set(emails)] // deduplicate
+  }
+
+  const handleFileDrop = useCallback((file: File) => {
+    setBulkError(null)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result as string
+      const emails = parseCsvFile(content)
+      if (emails.length === 0) {
+        setBulkError('No valid email addresses found in the file. Make sure there\'s an email column.')
+        return
+      }
+      setBulkEmails(emails)
+    }
+    reader.readAsText(file)
+  }, [])
+
+  function handleCsvDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setCsvDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileDrop(file)
+  }
+
+  function handleCsvInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) handleFileDrop(file)
+  }
+
   async function handleBulkInvite(e: React.FormEvent) {
     e.preventDefault()
-    const raw = bulkText.trim()
-    if (!raw) return
-
-    // Parse comma-separated or newline-separated emails
-    const emails = raw
-      .split(/[\n,]+/)
-      .map(s => s.trim().toLowerCase())
-      .filter(s => s.includes('@'))
+    const emails = bulkEmails
 
     if (emails.length === 0) {
-      setBulkError('No valid emails found. Enter one email per line or separate with commas.')
+      setBulkError('No emails loaded. Drop a CSV file or paste emails.')
       return
     }
 
@@ -186,10 +229,10 @@ export default function LearnerManager({ courseId, learners, summary }: Props) {
 
     setBulkResults(results)
     if (results.length > 0) {
-      setBulkText('')
+      setBulkEmails([])
       router.refresh()
     } else {
-      setBulkError('All invites failed. Check the emails and try again.')
+      setBulkError('All invites failed. Check the email addresses and try again.')
     }
     setBulkLoading(false)
   }
@@ -263,7 +306,7 @@ export default function LearnerManager({ courseId, learners, summary }: Props) {
           )}
         </div>
 
-        {/* Bulk invite */}
+        {/* Bulk invite — CSV drop zone */}
         <div className="bg-[#0a0a18] border border-[#2a2a4a] rounded-xl p-5 space-y-3">
           <p className="text-sm font-medium text-white flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-400" />
@@ -278,20 +321,87 @@ export default function LearnerManager({ courseId, learners, summary }: Props) {
           )}
 
           <form onSubmit={handleBulkInvite} className="space-y-3">
-            <textarea
-              value={bulkText}
-              onChange={e => setBulkText(e.target.value)}
-              placeholder={"alice@company.com\nbob@company.com\ncarol@company.com\n\nor separate with commas"}
-              rows={5}
-              className="w-full bg-[#0a0a18] border border-[#2a2a4a] rounded-lg px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500 resize-none"
+            {/* Drop zone */}
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv,.txt"
+              className="hidden"
+              onChange={handleCsvInput}
             />
+            <div
+              onDragOver={e => { e.preventDefault(); setCsvDragOver(true) }}
+              onDragLeave={() => setCsvDragOver(false)}
+              onDrop={handleCsvDrop}
+              onClick={() => csvInputRef.current?.click()}
+              className={`relative w-full rounded-xl border-2 border-dashed transition-all cursor-pointer text-center py-6 px-4 ${
+                csvDragOver
+                  ? 'border-indigo-400 bg-indigo-500/10'
+                  : bulkEmails.length > 0
+                  ? 'border-emerald-500/50 bg-emerald-500/5'
+                  : 'border-[#2a2a4a] hover:border-indigo-500/50 hover:bg-[#1a1a2e]'
+              }`}
+            >
+              {bulkEmails.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="text-emerald-400 font-semibold text-sm">
+                    ✓ {bulkEmails.length} email{bulkEmails.length !== 1 ? 's' : ''} loaded
+                  </div>
+                  <div className="flex flex-wrap gap-1 justify-center max-h-24 overflow-y-auto">
+                    {bulkEmails.slice(0, 12).map(e => (
+                      <span key={e} className="text-[10px] bg-[#1a1a2e] border border-[#2a2a4a] rounded px-2 py-0.5 text-slate-400 font-mono">
+                        {e}
+                      </span>
+                    ))}
+                    {bulkEmails.length > 12 && (
+                      <span className="text-[10px] text-slate-500">+{bulkEmails.length - 12} more</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); setBulkEmails([]); setBulkResults([]) }}
+                    className="text-xs text-slate-500 hover:text-red-400 transition-colors mt-1"
+                  >
+                    Clear list
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-2xl">📋</div>
+                  <div className="text-sm text-slate-300 font-medium">
+                    Drop a CSV file here
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    or click to browse · .csv or .txt · any column with emails
+                  </div>
+                  <div className="text-xs text-slate-600 mt-2">
+                    Exports from Google Contacts, Outlook, HubSpot, Salesforce all work
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Also allow paste */}
+            <div className="relative">
+              <textarea
+                placeholder="Or paste emails here (one per line, or comma-separated)…"
+                rows={3}
+                onChange={e => {
+                  const emails = parseEmails(e.target.value)
+                  if (emails.length > 0) setBulkEmails(emails)
+                }}
+                className="w-full bg-[#0a0a18] border border-[#2a2a4a] rounded-lg px-4 py-2.5 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-indigo-500/50 resize-none"
+              />
+            </div>
+
             <button
               type="submit"
-              disabled={bulkLoading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+              disabled={bulkLoading || bulkEmails.length === 0}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              {bulkLoading ? 'Inviting…' : 'Invite All'}
+              {bulkLoading
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Inviting…</>
+                : <><Send className="w-3.5 h-3.5" /> Invite {bulkEmails.length > 0 ? `${bulkEmails.length} people` : 'All'}</>}
             </button>
           </form>
 
