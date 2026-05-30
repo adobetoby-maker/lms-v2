@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { GraduationCap, LayoutDashboard, Settings, LogOut } from 'lucide-react'
+import { GraduationCap, LayoutDashboard, Settings, ShieldCheck } from 'lucide-react'
 import SignOutButton from './SignOutButton'
 
 export default async function Navbar() {
@@ -53,6 +53,13 @@ export default async function Navbar() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
                 >
                   Completions
+                </Link>
+                <Link
+                  href="/admin/compliance"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Compliance
                 </Link>
               </>
             ) : (
