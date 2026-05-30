@@ -1,0 +1,346 @@
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { CheckCircle, Loader2, PlayCircle, AlertCircle, Trophy } from 'lucide-react'
+
+type Video = {
+  id: number
+  title: string
+  url: string
+  duration_seconds: number
+  sort_order: number
+  ytId: string | null
+}
+
+type Question = {
+  id: number
+  text: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+}
+
+type Status = 'invited' | 'in_progress' | 'passed' | 'failed'
+
+interface Props {
+  courseId: number
+  enrollmentId: number
+  videoWatched: boolean
+  status: Status
+  videos: Video[]
+  questions: Question[]
+  requireFullVideoWatch: boolean
+}
+
+interface QuizResult {
+  score: number
+  passed: boolean
+  correctCount: number
+  totalCount: number
+}
+
+const OPTIONS = ['A', 'B', 'C', 'D'] as const
+type Option = typeof OPTIONS[number]
+
+export default function CourseClient({
+  courseId,
+  enrollmentId,
+  videoWatched: initialVideoWatched,
+  status: initialStatus,
+  videos,
+  questions,
+  requireFullVideoWatch,
+}: Props) {
+  const [videoWatched, setVideoWatched] = useState(initialVideoWatched)
+  const [status, setStatus] = useState<Status>(initialStatus)
+  const [markingWatched, setMarkingWatched] = useState(false)
+  const [answers, setAnswers] = useState<Record<number, Option>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<QuizResult | null>(null)
+  const [quizError, setQuizError] = useState<string | null>(null)
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0)
+
+  const currentVideo = videos[activeVideoIdx]
+  const allAnswered = questions.length > 0 && questions.every(q => answers[q.id])
+
+  async function handleMarkWatched() {
+    setMarkingWatched(true)
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from('enrollments')
+      .update({
+        video_watched: true,
+        status: 'in_progress',
+      })
+      .eq('id', enrollmentId)
+
+    if (!error) {
+      setVideoWatched(true)
+      if (status === 'invited') setStatus('in_progress')
+    }
+    setMarkingWatched(false)
+  }
+
+  async function handleSubmitQuiz() {
+    if (!allAnswered) return
+    setSubmitting(true)
+    setQuizError(null)
+
+    const answersArray = questions.map(q => ({
+      questionId: q.id,
+      answer: answers[q.id],
+    }))
+
+    const res = await fetch('/api/quiz/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId, answers: answersArray }),
+    })
+
+    if (!res.ok) {
+      setQuizError('Failed to submit quiz. Please try again.')
+      setSubmitting(false)
+      return
+    }
+
+    const data: QuizResult = await res.json()
+    setResult(data)
+    setStatus(data.passed ? 'passed' : 'failed')
+    setSubmitting(false)
+  }
+
+  function handleRetry() {
+    setAnswers({})
+    setResult(null)
+    setQuizError(null)
+  }
+
+  const optionLabel: Record<Option, string> = {
+    A: 'A',
+    B: 'B',
+    C: 'C',
+    D: 'D',
+  }
+
+  function getOptionText(q: Question, opt: Option): string {
+    const map: Record<Option, string> = {
+      A: q.option_a,
+      B: q.option_b,
+      C: q.option_c,
+      D: q.option_d,
+    }
+    return map[opt]
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Video player */}
+      {videos.length > 0 && (
+        <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl overflow-hidden">
+          <div className="p-5 border-b border-[#2a2a4a] flex items-center gap-3">
+            <PlayCircle className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-base font-semibold text-white">
+              {currentVideo?.title ?? 'Video Lesson'}
+            </h2>
+          </div>
+
+          {/* Video selector tabs if multiple */}
+          {videos.length > 1 && (
+            <div className="flex gap-1 px-5 pt-4 flex-wrap">
+              {videos.map((v, i) => (
+                <button
+                  key={v.id}
+                  onClick={() => setActiveVideoIdx(i)}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                    i === activeVideoIdx
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-[#0a0a18] text-slate-400 hover:text-white border border-[#2a2a4a]'
+                  }`}
+                >
+                  {i + 1}. {v.title}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Embed */}
+          <div className="p-5">
+            {currentVideo?.ytId ? (
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+                <iframe
+                  src={`https://www.youtube.com/embed/${currentVideo.ytId}?rel=0&modestbranding=1`}
+                  title={currentVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              </div>
+            ) : (
+              <div className="w-full aspect-video rounded-lg bg-[#0a0a18] border border-[#2a2a4a] flex items-center justify-center">
+                <div className="text-center">
+                  <PlayCircle className="w-12 h-12 text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-500 text-sm">Video URL not supported for embed</p>
+                  {currentVideo?.url && (
+                    <a
+                      href={currentVideo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 text-sm hover:underline mt-1 block"
+                    >
+                      Open video →
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Mark watched button */}
+          <div className="px-5 pb-5">
+            {videoWatched ? (
+              <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
+                <CheckCircle className="w-5 h-5" />
+                Video marked as watched
+              </div>
+            ) : (
+              <button
+                onClick={handleMarkWatched}
+                disabled={markingWatched}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+              >
+                {markingWatched ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Mark as Watched
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Quiz section */}
+      {questions.length > 0 && (
+        <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl">
+          <div className="p-5 border-b border-[#2a2a4a]">
+            <h2 className="text-base font-semibold text-white">Knowledge Check</h2>
+            <p className="text-slate-400 text-sm mt-0.5">
+              {questions.length} question{questions.length !== 1 ? 's' : ''} — answer all to submit
+            </p>
+          </div>
+
+          {!videoWatched ? (
+            <div className="p-6 text-center">
+              <PlayCircle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+              <p className="text-amber-400 font-medium">Watch the video first</p>
+              <p className="text-slate-500 text-sm mt-1">
+                Complete the video lesson above to unlock this quiz.
+              </p>
+            </div>
+          ) : result ? (
+            /* Quiz result */
+            <div className="p-6">
+              <div className={`text-center p-6 rounded-xl border ${
+                result.passed
+                  ? 'bg-emerald-500/10 border-emerald-500/30'
+                  : 'bg-red-500/10 border-red-500/30'
+              }`}>
+                {result.passed ? (
+                  <Trophy className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                ) : (
+                  <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                )}
+                <h3 className={`text-2xl font-bold mb-1 ${result.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {result.passed ? 'Congratulations!' : 'Not quite right'}
+                </h3>
+                <p className="text-white text-4xl font-black mb-3">{result.score}%</p>
+                <p className="text-slate-300 text-sm">
+                  {result.correctCount} of {result.totalCount} correct
+                </p>
+                <p className={`text-sm font-medium mt-2 ${result.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {result.passed ? 'You passed this course!' : 'You need a higher score to pass.'}
+                </p>
+              </div>
+              {!result.passed && (
+                <button
+                  onClick={handleRetry}
+                  className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                >
+                  Try Again
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Quiz form */
+            <div className="p-5 space-y-6">
+              {quizError && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  <p className="text-red-400 text-sm">{quizError}</p>
+                </div>
+              )}
+
+              {questions.map((q, qi) => (
+                <div key={q.id} className="space-y-3">
+                  <p className="text-white font-medium text-sm">
+                    <span className="text-indigo-400 font-bold">{qi + 1}.</span>{' '}
+                    {q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {OPTIONS.map(opt => {
+                      const selected = answers[q.id] === opt
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                          className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border text-sm transition-colors ${
+                            selected
+                              ? 'bg-indigo-600/20 border-indigo-500 text-white'
+                              : 'bg-[#0a0a18] border-[#2a2a4a] text-slate-300 hover:border-indigo-500/50 hover:text-white'
+                          }`}
+                        >
+                          <span className={`shrink-0 w-5 h-5 rounded-full border text-xs flex items-center justify-center font-bold ${
+                            selected
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'border-[#3a3a5a] text-slate-500'
+                          }`}>
+                            {opt}
+                          </span>
+                          <span>{getOptionText(q, opt)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleSubmitQuiz}
+                disabled={!allAnswered || submitting}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 mt-4"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  `Submit Quiz (${Object.keys(answers).length}/${questions.length} answered)`
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
