@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle, Lock, Unlock } from 'lucide-react'
+import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle, Lock, Unlock, Sparkles } from 'lucide-react'
 
 interface Question {
   id: number
@@ -41,6 +41,7 @@ export default function QuestionManager({ courseId, questions, requireFullVideoW
   const [loading, setLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState<number | null>(null)  // question id being improved
 
   function resetForm() {
     setText('')
@@ -104,6 +105,32 @@ export default function QuestionManager({ courseId, questions, requireFullVideoW
     await supabase.from('questions').delete().eq('id', questionId)
     router.refresh()
     setDeletingId(null)
+  }
+
+  async function handleAiImprove(q: Question) {
+    setAiLoading(q.id)
+    const content = `Question: ${q.text}\nA: ${q.option_a}\nB: ${q.option_b}\nC: ${q.option_c}\nD: ${q.option_d}\nCorrect: ${q.correct_answer}`
+    try {
+      const res = await fetch('/api/ai-improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'question', content }),
+      })
+      const data = await res.json()
+      if (data.result) {
+        const supabase = createClient()
+        await supabase.from('questions').update({
+          text: data.result.question,
+          option_a: data.result.optionA,
+          option_b: data.result.optionB,
+          option_c: data.result.optionC,
+          option_d: data.result.optionD,
+        }).eq('id', q.id)
+        router.refresh()
+      }
+    } catch { /* silent */ } finally {
+      setAiLoading(null)
+    }
   }
 
   const optionLabel: Record<OptionKey, string> = {
@@ -239,19 +266,31 @@ export default function QuestionManager({ courseId, questions, requireFullVideoW
               className="bg-[#0a0a18] border border-[#2a2a4a] rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-3 mb-3">
-                <p className="text-white text-sm font-medium">
+                <p className="text-white text-sm font-medium flex-1">
                   <span className="text-indigo-400 font-bold">{qi + 1}.</span> {q.text}
                 </p>
-                <button
-                  onClick={() => handleDelete(q.id)}
-                  disabled={deletingId === q.id}
-                  className="shrink-0 text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
-                >
-                  {deletingId === q.id
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <Trash2 className="w-4 h-4" />
-                  }
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleAiImprove(q)}
+                    disabled={aiLoading === q.id}
+                    title="AI cleanup with Claude Haiku"
+                    className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-violet-600/20 hover:bg-violet-600/35 border border-violet-500/30 text-violet-300 transition-colors disabled:opacity-40"
+                  >
+                    {aiLoading === q.id
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : <Sparkles className="w-3 h-3" />}
+                    {aiLoading === q.id ? '…' : 'AI'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(q.id)}
+                    disabled={deletingId === q.id}
+                    className="text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === q.id
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Trash2 className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {OPTIONS.map(opt => {
