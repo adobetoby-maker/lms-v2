@@ -154,7 +154,7 @@ export default async function AdminPage() {
                     <Link
                       key={course.id}
                       href={`/admin/courses/${course.id}`}
-                      className="flex items-center gap-4 bg-[#1a1a2e] border border-[#2a2a4a] hover:border-indigo-500/40 rounded-xl p-5 transition-colors group"
+                      className="flex items-center gap-4 bg-[#1a1a2e] border border-[#2a2a4a] hover:border-indigo-500/40 hover:bg-[#1e1e38] rounded-xl p-5 transition-all group cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center shrink-0">
                         <BookOpen className="w-5 h-5 text-indigo-400" />
@@ -174,7 +174,8 @@ export default async function AdminPage() {
                           {enrollCount} enrolled
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 shrink-0" />
+                      <span className="text-xs text-indigo-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mr-1">Edit →</span>
+                      <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 shrink-0" />
                     </Link>
                   )
                 })
