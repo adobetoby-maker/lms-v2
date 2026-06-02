@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Video, Trash2, Loader2, Clock, Upload, Film, MonitorPlay,
-  CheckCircle2, AlertCircle, X, CloudUpload,
+  CheckCircle2, AlertCircle, X, CloudUpload, Library,
 } from 'lucide-react'
+import { VideoLibraryPicker } from '@/components/VideoLibraryPicker'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -101,6 +102,7 @@ function TabBtn({
 export default function VideoManager({ courseId, videos }: Props) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
+  const [showLibrary, setShowLibrary] = useState(false)
   const [activeTab, setActiveTab] = useState<VideoType>('youtube')
 
   // Shared
@@ -246,6 +248,7 @@ export default function VideoManager({ courseId, videos }: Props) {
   }
 
   return (
+    <>
     <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -254,13 +257,22 @@ export default function VideoManager({ courseId, videos }: Props) {
           Videos
           <span className="text-sm font-normal text-slate-400">({videos.length})</span>
         </h2>
-        <button
-          onClick={() => { setShowForm(v => !v); if (showForm) resetForm() }}
-          className="flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-        >
-          {showForm ? <X className="w-4 h-4" /> : <CloudUpload className="w-4 h-4" />}
-          {showForm ? 'Cancel' : 'Add Video'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowLibrary(true)}
+            className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors"
+          >
+            <Library className="w-4 h-4" />
+            Browse Library
+          </button>
+          <button
+            onClick={() => { setShowForm(v => !v); if (showForm) resetForm() }}
+            className="flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            {showForm ? <X className="w-4 h-4" /> : <CloudUpload className="w-4 h-4" />}
+            {showForm ? 'Cancel' : 'Add Custom'}
+          </button>
+        </div>
       </div>
 
       {/* Add form */}
@@ -487,5 +499,14 @@ export default function VideoManager({ courseId, videos }: Props) {
         </div>
       )}
     </div>
+
+    {showLibrary && (
+      <VideoLibraryPicker
+        courseId={courseId}
+        onClose={() => setShowLibrary(false)}
+        onAdded={() => router.refresh()}
+      />
+    )}
+    </>
   )
 }
