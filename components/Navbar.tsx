@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { GraduationCap, LayoutDashboard, Settings, ShieldCheck, Users, FolderOpen } from 'lucide-react'
+import { GraduationCap, LayoutDashboard, Settings, ShieldCheck, Users, FolderOpen, ClipboardList } from 'lucide-react'
 import brand from '@/lib/brand'
 import SignOutButton from './SignOutButton'
 
@@ -30,7 +30,7 @@ export default async function Navbar() {
               <img
                 src={brand.logoPath}
                 alt={brand.logoAlt}
-                className="h-8 w-auto object-contain"
+                className="h-9 w-auto object-contain max-w-[160px]"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
             ) : (
@@ -87,6 +87,13 @@ export default async function Navbar() {
                   <FolderOpen className="w-4 h-4" />
                   Documents
                 </Link>
+                <Link
+                  href="/admin/surveys"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  Surveys
+                </Link>
               </>
             ) : (
               <>
@@ -103,6 +110,13 @@ export default async function Navbar() {
                 >
                   <FolderOpen className="w-4 h-4" />
                   Documents
+                </Link>
+                <Link
+                  href="/surveys"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  Surveys
                 </Link>
               </>
             )}

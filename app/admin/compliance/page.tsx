@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, AlertTriangle, ExternalLink } from 'lucide-react'
 import { COMPLIANCE_TEMPLATES } from '@/lib/compliance-templates'
 import ComplianceClient from './ComplianceClient'
+import brand from '@/lib/brand'
 
 export const metadata = { title: 'Compliance Training Guide — LMS Admin' }
 
@@ -16,9 +17,18 @@ export default async function CompliancePage() {
   const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
   if (!profile?.is_admin) redirect('/dashboard')
 
-  const totalModules = COMPLIANCE_TEMPLATES.reduce((a, t) => a + t.questions.length, 0)
-  const totalSlides  = COMPLIANCE_TEMPLATES.reduce((a, t) => a + t.slides.length, 0)
-  const freeCount    = COMPLIANCE_TEMPLATES.reduce((a, t) => a + t.sources.filter(s => s.type !== 'paid').length, 0)
+  // Sort templates: brand's industry first, then everything else
+  const sortedTemplates = [...COMPLIANCE_TEMPLATES].sort((a, b) => {
+    const aMatch = a.industry?.toLowerCase().includes(brand.industry) || a.tags?.some(t => t.toLowerCase() === brand.industry)
+    const bMatch = b.industry?.toLowerCase().includes(brand.industry) || b.tags?.some(t => t.toLowerCase() === brand.industry)
+    if (aMatch && !bMatch) return -1
+    if (!aMatch && bMatch) return 1
+    return 0
+  })
+
+  const totalModules = sortedTemplates.reduce((a, t) => a + t.questions.length, 0)
+  const totalSlides  = sortedTemplates.reduce((a, t) => a + t.slides.length, 0)
+  const freeCount    = sortedTemplates.reduce((a, t) => a + t.sources.filter(s => s.type !== 'paid').length, 0)
 
   return (
     <div className="min-h-screen bg-[#0a0a18]">
@@ -72,7 +82,7 @@ export default async function CompliancePage() {
         </div>
 
         {/* Interactive template list */}
-        <ComplianceClient templates={COMPLIANCE_TEMPLATES} />
+        <ComplianceClient templates={sortedTemplates} />
 
         {/* Footer */}
         <div className="mt-10 text-center">

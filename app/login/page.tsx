@@ -83,7 +83,7 @@ export default function LoginPage() {
               <img
                 src={brand.logoPath}
                 alt={brand.logoAlt}
-                className="h-10 w-auto object-contain"
+                className="h-14 w-auto object-contain max-w-[200px]"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
             ) : (
