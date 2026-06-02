@@ -274,13 +274,22 @@ export default function CourseClient({
 
               <div className="flex gap-3 mt-4">
                 {result.passed ? (
-                  <Link
-                    href="/dashboard"
-                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg text-sm transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href={`/certificate/${enrollmentId}`}
+                      target="_blank"
+                      className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg text-sm transition-colors"
+                    >
+                      🏆 Download Certificate
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center justify-center gap-2 px-4 bg-[#0a0a18] hover:bg-[#252545] border border-[#2a2a4a] text-slate-300 font-medium py-3 rounded-lg text-sm transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </>
                 ) : (
                   <>
                     <button

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle, Lock, Unlock, Sparkles } from 'lucide-react'
+import { HelpCircle, Trash2, PlusCircle, Loader2, CheckCircle, Lock, Unlock, Sparkles, Users } from 'lucide-react'
 
 interface Question {
   id: number
@@ -316,6 +317,23 @@ export default function QuestionManager({ courseId, questions, requireFullVideoW
           ))}
         </div>
       )}
+
+      {/* Quick link to global Learner Management */}
+      <div className="mt-6 flex items-center justify-between bg-[#1a1a2e] border border-[#2a2a4a] rounded-xl px-5 py-4">
+        <div className="flex items-center gap-3">
+          <Users className="w-5 h-5 text-indigo-400" />
+          <div>
+            <p className="text-sm font-medium text-white">Manage Learners & Invites</p>
+            <p className="text-xs text-slate-500 mt-0.5">View all enrollments, resend invites, and track completions across every course.</p>
+          </div>
+        </div>
+        <Link
+          href="/admin/learners"
+          className="shrink-0 text-sm px-4 py-2 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 transition-colors font-medium"
+        >
+          Open →
+        </Link>
+      </div>
     </div>
   )
 }

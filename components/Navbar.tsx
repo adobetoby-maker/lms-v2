@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { GraduationCap, LayoutDashboard, Settings, ShieldCheck } from 'lucide-react'
+import { GraduationCap, LayoutDashboard, Settings, ShieldCheck, Users, FolderOpen } from 'lucide-react'
 import SignOutButton from './SignOutButton'
 
 export default async function Navbar() {
@@ -55,21 +55,44 @@ export default async function Navbar() {
                   Completions
                 </Link>
                 <Link
+                  href="/admin/learners"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <Users className="w-4 h-4" />
+                  Learners
+                </Link>
+                <Link
                   href="/admin/compliance"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   Compliance
                 </Link>
+                <Link
+                  href="/admin/documents"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Documents
+                </Link>
               </>
             ) : (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Dashboard
-              </Link>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/documents"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-[#1a1a2e] transition-colors"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Documents
+                </Link>
+              </>
             )}
           </nav>
 
