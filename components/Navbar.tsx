@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { GraduationCap, LayoutDashboard, Settings, ShieldCheck, Users, FolderOpen } from 'lucide-react'
+import brand from '@/lib/brand'
 import SignOutButton from './SignOutButton'
 
 export default async function Navbar() {
@@ -25,10 +26,21 @@ export default async function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href={profile?.is_admin ? '/admin' : '/dashboard'} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-white text-lg">LMS</span>
+            {brand.logoPath ? (
+              <img
+                src={brand.logoPath}
+                alt={brand.logoAlt}
+                className="h-8 w-auto object-contain"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            ) : (
+              <>
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-white text-lg">{brand.name}</span>
+              </>
+            )}
           </Link>
 
           {/* Nav links */}

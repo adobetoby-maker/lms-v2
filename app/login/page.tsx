@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { GraduationCap, Loader2, AlertCircle } from 'lucide-react'
+import brand from '@/lib/brand'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -78,13 +79,29 @@ export default function LoginPage() {
         <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-2xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">LMS Portal</h1>
-              <p className="text-xs text-slate-400">Learning Management System</p>
-            </div>
+            {brand.logoPath ? (
+              <img
+                src={brand.logoPath}
+                alt={brand.logoAlt}
+                className="h-10 w-auto object-contain"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">{brand.name}</h1>
+                  <p className="text-xs text-slate-400">{brand.tagline}</p>
+                </div>
+              </>
+            )}
+            {brand.logoPath && (
+              <div className="border-l border-white/10 pl-3">
+                <p className="text-xs text-slate-400 leading-tight">{brand.tagline}</p>
+              </div>
+            )}
           </div>
 
           <h2 className="text-2xl font-semibold text-white mb-1">Welcome back</h2>

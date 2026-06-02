@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import brand from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: 'LMS — Learning Management System',
-  description: 'Complete your training courses and track your progress.',
+  title: `${brand.name} — ${brand.tagline}`,
+  description: `Staff compliance training powered by ${brand.company}.`,
 }
 
 export default function RootLayout({

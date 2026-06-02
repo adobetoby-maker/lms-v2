@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import Navbar from '@/components/Navbar'
+import brand from '@/lib/brand'
 import StatusBadge from '@/components/StatusBadge'
 import { BookOpen, Users, Trophy, PlusCircle, ChevronRight, Clock } from 'lucide-react'
 
@@ -87,7 +88,10 @@ export default async function AdminPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            {brand.logoPath && (
+              <img src={brand.logoPath} alt={brand.logoAlt} className="h-10 w-auto object-contain mb-3" style={{ filter: 'brightness(0) invert(1)' }} />
+            )}
+            <h1 className="text-3xl font-bold text-white">{brand.name} — Admin</h1>
             <p className="text-slate-400 mt-1">Manage courses, learners, and completions.</p>
           </div>
           <Link
